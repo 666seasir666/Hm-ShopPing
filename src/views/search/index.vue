@@ -12,7 +12,7 @@
   <div class="search">
     <van-nav-bar title="商品搜索" left-arrow @click-left="$router.go(-1)" />
 
-    <van-search v-model="search" show-action placeholder="请输入搜索关键词" clearable>
+    <van-search v-model="search" show-action placeholder="请输入搜索关键词" clearable @keydown.enter="goSearch(search)">
       <template #action>
         <div @click="goSearch(search)">搜索</div>
       </template>
@@ -30,6 +30,7 @@
     </div>
   </div>
 </template>
+
 <script>
 import { getHistoryList, setHistoryList } from '@/utils/storage'
 // import(导入)其他文件（如：组件，工具js，第三方插件js，json文件，图片文件等）
@@ -53,6 +54,16 @@ export default {
   /** 所有方法 */
   methods: {
     goSearch (key) {
+      // 去除搜索关键词两端的空格
+      const Search = this.search.trim()
+
+      if (Search === '') {
+        // 如果搜索内容为空，弹出提示
+        this.$toast('搜索内容不能为空')
+      } else {
+        // 否则执行正常搜索操作，可以在这里添加你的搜索逻辑
+        this.$toast(`当前搜索是:${Search}`)
+      }
       // console.log('用户进行了搜索', key)
       const index = this.history.indexOf(key)// 获取关键字在历史记录中的索引
 
@@ -64,11 +75,15 @@ export default {
       this.history.unshift(key)// 将关键字添加到历史记录的开头
 
       setHistoryList(this.history)// 调用函数把历史记录存到本地
+
+      // 跳转到搜索列表
+      this.$router.push(`/searchlist?search=${key}`)
     },
 
     clear () {
       this.history = []// 清空历史记录
       setHistoryList([]) // 调用函数并清空本地存储历史记录返回空数组
+      this.$toast.success('清空历史成功')
     }
   },
   /** 创建组件时执行(有VM对象this) */
@@ -89,6 +104,7 @@ export default {
   deactivated () { /** keep-alive组件停用时调用。仅针对keep-alive组件有效 */ }
 }
 </script>
+
 <style scoped lang='less'>
  /* @import url(); 引入css类 */
 .search {
@@ -135,6 +151,10 @@ export default {
     white-space: nowrap;
     text-overflow: ellipsis;
     margin-bottom: 10px;
+  }
+  .test{
+    border: 1px solid #09f865;
+    border-radius: 5px 0 0 5px;
   }
 }
 </style>

@@ -90,7 +90,7 @@ export default {
     this.bannerList = pageData.items[1].data
     this.navList = pageData.items[3].data
     this.proList = pageData.items[6].data
-    console.log(this.proList)
+    // console.log(this.proList)
   },
   /** 加载完组件时执行(主要预处理数据) */
   mounted () {
