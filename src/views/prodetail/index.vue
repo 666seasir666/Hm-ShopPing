@@ -86,9 +86,42 @@
         <van-icon name="shopping-cart-o" />
         <span>购物车</span>
       </div>
-      <div class="btn-add">加入购物车</div>
-      <div class="btn-buy">立刻购买</div>
+      <div class="btn-add" @click="addFn">加入购物车</div>
+      <div class="btn-buy" @click="buyFn">立刻购买</div>
     </div>
+
+    <!-- 加入购物车的弹层 -->
+    <van-action-sheet v-model="showPannel" :title="mode === 'cart' ? '加入购物车' : '立刻购买'">
+    <div class="product">
+    <div class="product-title">
+      <div class="left">
+        <img :src="ProductDetails.goods_image" alt="">
+      </div>
+      <div class="right">
+        <div class="price">
+          <span>¥</span>
+          <span class="nowprice">{{ ProductDetails.goods_price_min }}</span>
+        </div>
+        <div class="count">
+          <span>库存</span>
+          <span>{{ ProductDetails.stock_total}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="num-box">
+      <span>数量</span>
+      <!-- 加入购物车-数字框基本封装 -->
+      <CountBox v-model="addCount"></CountBox>
+    </div>
+
+    <!-- 有库存才显示提交按钮 -->
+    <div class="showbtn" v-if="ProductDetails.stock_total > 0">
+      <div class="btn" v-if="mode === 'cart'">加入购物车</div>
+      <div class="btn now" v-if="mode === 'buyNow'">立刻购买</div>
+    </div>
+    <div class="btn-none" v-else>该商品已抢完</div>
+  </div>
+    </van-action-sheet>
   </div>
 </template>
 
@@ -99,9 +132,12 @@ import { getProDetail, getProComments } from '@/api/product'
 import defaultImg from '@/assets/default-avatar.png'
 // import(导入)其他文件（如：组件，工具js，第三方插件js，json文件，图片文件等）
 
+import CountBox from '@/components/CountBox.vue'
 export default {
   /** 注册组件 */
-  components: {},
+  components: {
+    CountBox
+  },
   /** 接受父组件传值 */
   props: {},
   name: 'ProDetail',
@@ -109,11 +145,17 @@ export default {
     return {
       images: [], // 初始化商品详情图片默认为空
       current: 0, // 商品详情图片轮播图
+      // detail: {},
       ProductDetails: {}, // 商品详情
 
       commentList: [], // 评价列表
       total: [], // 总评价数
-      defaultImg // 用户评论默认头像
+      defaultImg, // 用户评论默认头像
+
+      showPannel: false, // 购物车弹层默认关闭
+      mode: 'cart', // 标记弹层状态
+
+      addCount: 1// 数字框绑定的数据
     }
   },
   /** 计算属性 */
@@ -147,12 +189,28 @@ export default {
       // console.log(this.images)
     },
 
+    // 异步方法，用于获取商品评价数据
     async getComments () {
-      const { data: { list, total } } = await getProComments(this.goodsId, 3)// 限制展示3条评论
+      // 通过 getProComments 函数获取商品评价数据，使用 this.goodsId 作为参数，同时限制展示3条评论
+      const { data: { list, total } } = await getProComments(this.goodsId, 3)
+
+      // 将获取到的商品评价列表存储在组件的 commentList 属性中
       this.commentList = list
 
+      // 存储评价的总数
       this.total = total
-      console.log(this.total)
+    },
+
+    // 点击“加入购物车”按钮时触发的方法
+    addFn () {
+      this.mode = 'cart'// 将 mode 设置为 'cart'，表示用户执行了加入购物车操作
+      this.showPannel = true// 显示购物车面板
+    },
+
+    // 点击“立刻购买”按钮时触发的方法
+    buyFn () {
+      this.mode = 'buyNow'// 将 mode 设置为 'cart'，表示用户执行了购买操作
+      this.showPannel = true// 显示购物车面板
     }
   },
   /** 创建组件时执行(有VM对象this) */
@@ -312,6 +370,7 @@ export default {
       text-align: center;
       color: #fff;
       font-size: 14px;
+      cursor: pointer; /* 显示手型光标 */
     }
     .btn-buy {
       background-color: #fe5630;
@@ -321,5 +380,54 @@ export default {
 
 .tips {
   padding: 10px;
+}
+
+// 加入购物车和立即购买弹层样式
+.product {
+  .product-title {
+    display: flex;
+    .left {
+      img {
+        width: 90px;
+        height: 90px;
+      }
+      margin: 10px;
+    }
+    .right {
+      flex: 1;
+      padding: 10px;
+      .price {
+        font-size: 14px;
+        color: #fe560a;
+        .nowprice {
+          font-size: 24px;
+          margin: 0 5px;
+        }
+      }
+    }
+  }
+
+  .num-box {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    align-items: center;
+  }
+
+  .btn, .btn-none {
+    height: 40px;
+    line-height: 40px;
+    margin: 20px;
+    border-radius: 20px;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    background-color: rgb(255, 148, 2);
+  }
+  .btn.now {
+    background-color: #fe5630;
+  }
+  .btn-none {
+    background-color: #cccccc;
+  }
 }
 </style>

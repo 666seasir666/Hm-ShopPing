@@ -20,25 +20,55 @@ Vue.use(VueRouter)
 const router = new VueRouter({
   routes: [
     {
+      path: '/login',
+      component: Login
+    },
+    {
       path: '/',
       component: Layou,
       // 当用户访问http://localhost:8080/#/重定向到首页
       redirect: '/home',
       // 二级路由配置
       children: [
-        { path: '/home', component: Home },
-        { path: '/category', component: Category },
-        { path: '/cart', component: Cart },
-        { path: '/user', component: User }
+        {
+          path: '/home',
+          component: Home
+        },
+        {
+          path: '/category',
+          component: Category
+        },
+        {
+          path: '/cart',
+          component: Cart
+        },
+        {
+          path: '/user',
+          component: User
+        }
       ]
     },
-    { path: '/login', component: Login },
-    { path: '/myorder', component: Myorder },
+    {
+      path: '/search',
+      component: Search
+    },
+    {
+      path: '/searchlist',
+      component: SearchList
+    },
+    {
     // 动态路由传参,确认将来是哪个商品。路由参数中需要携带ID
-    { path: '/pay', component: Pay },
-    { path: '/prodetail/:id', component: Prodetail },
-    { path: '/search', component: Search },
-    { path: '/searchlist', component: SearchList }
+      path: '/prodetail/:id',
+      component: Prodetail
+    },
+    {
+      path: '/pay',
+      component: Pay
+    },
+    {
+      path: '/myorder',
+      component: Myorder
+    }
   ]
 })
 
