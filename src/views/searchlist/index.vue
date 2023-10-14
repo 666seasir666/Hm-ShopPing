@@ -19,7 +19,7 @@ export default {
   components: {},
   /** 接受父组件传值 */
   props: {},
-  name: '我是searchlistIndex',
+  name: 'searchlistIndex',
   data () {
     return {
 

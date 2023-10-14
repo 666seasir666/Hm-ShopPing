@@ -106,6 +106,7 @@ export default {
   deactivated () { /** keep-alive组件停用时调用。仅针对keep-alive组件有效 */ }
 }
 </script>
+
 <style scoped lang='less'>
  /* @import url(); 引入css类 */
 // 主题 padding

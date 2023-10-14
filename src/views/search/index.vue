@@ -22,7 +22,7 @@
     <div class="search-history" v-if="history.length > 0">
       <div class="title">
         <span>最近搜索</span>
-        <van-icon name="delete-o" size="16" />
+        <van-icon @click="clear" name="delete-o" size="16" />
       </div>
       <div class="list">
         <div v-for="item in history" :key="item" class="list-item" @click="$router.push('/searchlist')">{{item}}</div>
@@ -31,6 +31,7 @@
   </div>
 </template>
 <script>
+import { getHistoryList, setHistoryList } from '@/utils/storage'
 // import(导入)其他文件（如：组件，工具js，第三方插件js，json文件，图片文件等）
 
 export default {
@@ -41,8 +42,8 @@ export default {
   name: 'SearchIndex',
   data () {
     return {
-      search: '',
-      history: ['手机', '空调', '白酒', '电视', '相机', '风扇', '茅台', '平板']
+      search: '', // 搜索输入框内容
+      history: getHistoryList()// 历史记录-其初始值是调用 getHistoryList() 函数
     }
   },
   /** 计算属性 */
@@ -52,13 +53,22 @@ export default {
   /** 所有方法 */
   methods: {
     goSearch (key) {
-      // console.log('这叼毛用户进行了搜索', key)
-      const index = this.history.indexOf(key)
+      // console.log('用户进行了搜索', key)
+      const index = this.history.indexOf(key)// 获取关键字在历史记录中的索引
+
+      // 如果关键字存在于历史记录中
       if (index !== -1) {
+        // 从历史记录中删除该关键字
         this.history.splice(index, 1)
       }
-      this.history.unshift(key)
-      this.$router.push(`/searchlist?search=${key}`)
+      this.history.unshift(key)// 将关键字添加到历史记录的开头
+
+      setHistoryList(this.history)// 调用函数把历史记录存到本地
+    },
+
+    clear () {
+      this.history = []// 清空历史记录
+      setHistoryList([]) // 调用函数并清空本地存储历史记录返回空数组
     }
   },
   /** 创建组件时执行(有VM对象this) */
