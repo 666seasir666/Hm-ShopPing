@@ -5,7 +5,7 @@ import Layou from '@/views/layou'// 一级路由首页
 import Login from '@/views/login'// 登录
 import Myorder from '@/views/myorder'
 import Pay from '@/views/pay'// 支付
-import Prodetail from '@/views/prodetail'// 商品详情
+import ProDetail from '@/views/prodetail'// 商品详情
 import Search from '@/views/search'// 搜索
 import SearchList from '@/views/searchlist'// 搜索列表
 
@@ -59,7 +59,7 @@ const router = new VueRouter({
     {
     // 动态路由传参,确认将来是哪个商品。路由参数中需要携带ID
       path: '/prodetail/:id',
-      component: Prodetail
+      component: ProDetail
     },
     {
       path: '/pay',

@@ -13,7 +13,7 @@
     <van-nav-bar title="购物车" fixed />
     <!-- 购物车开头 -->
     <div class="cart-title">
-      <span class="all">共<i>4</i>件商品</span>
+      <span class="all">共<i>{{cartTotal}}</i>件商品</span>
       <span class="edit">
         <van-icon name="edit" />
         编辑
@@ -22,38 +22,40 @@
 
     <!-- 购物车列表 -->
     <div class="cart-list">
-      <div class="cart-item" v-for="item in 5" :key="item">
-        <van-checkbox></van-checkbox>
+      <div class="cart-item" v-for="item in cartList" :key="item.goods_id">
+        <van-checkbox icon-size="18" :value="item.isChecked" @click="toggleCheck(item.goods_id)" ></van-checkbox>
         <div class="show">
-          <img src="http://cba.itlike.com/public/uploads/10001/20230321/a072ef0eef1648a5c4eae81fad1b7583.jpg" alt="">
+          <img :src="item.goods.goods_image" alt="">
         </div>
         <div class="info">
-          <span class="tit text-ellipsis-2">新Pad 14英寸 12+128 远峰蓝 M6平板电脑 智能安卓娱乐十核游戏学习二合一 低蓝光护眼超清4K全面三星屏5GWIFI全网通 蓝魔快本平板</span>
+          <span class="tit text-ellipsis-2">{{ item.goods.goods_name }}</span>
           <span class="bottom">
-            <div class="price">¥ <span>1247.04</span></div>
-            <div class="count-box">
+            <div class="price">¥ <span>{{ item.goods.goods_price_min }}</span></div>
+            <!-- 既希望保留原本的形参，又需要通过调用函数传参 => 箭头函数包装一层 -->
+            <CountBox :value="item.goods_num" @input="value => changeCount(value, item.goods_id, item.goods_sku_id)"></CountBox>
+            <!-- <div class="count-box">
               <button class="minus">-</button>
-              <input class="inp" :value="4" type="text" readonly>
+              <input class="inp" :value="40" type="text" readonly>
               <button class="add">+</button>
-            </div>
+            </div> -->
           </span>
         </div>
       </div>
     </div>
 
     <div class="footer-fixed">
-      <div  class="all-check">
-        <van-checkbox  icon-size="18"></van-checkbox>
+      <div @click="toggleAllCheck" class="all-check">
+        <van-checkbox  icon-size="18" :value="isAllChecked"></van-checkbox>
         全选
       </div>
 
       <div class="all-total">
         <div class="price">
           <span>合计：</span>
-          <span>¥ <i class="totalPrice">99.99</i></span>
+          <span>¥ <i class="totalPrice">{{selPrice}}</i></span>
         </div>
-        <div v-if="true" class="goPay">结算(5)</div>
-        <div v-else class="delete">删除</div>
+        <div v-if="true" class="goPay" :class="{ disabled: selCount === 0}">结算({{selCount}})</div>
+        <div v-else class="delete" :class="{ disabled: selCount === 0}">删除</div>
       </div>
     </div>
   </div>
@@ -61,10 +63,13 @@
 
 <script>
 // import(导入)其他文件（如：组件，工具js，第三方插件js，json文件，图片文件等）
+import CountBox from '@/components/CountBox.vue'
+// 导入 Vuex 中的 mapState 辅助函数，用于将组件的局部状态映射到组件的计算属性
+import { mapState, mapGetters } from 'vuex'
 
 export default {
   /** 注册组件 */
-  components: {},
+  components: { CountBox },
   /** 接受父组件传值 */
   props: {},
   name: 'CartPage',
@@ -74,16 +79,43 @@ export default {
     }
   },
   /** 计算属性 */
-  computed: {},
+  computed: {
+    // 使用 mapState 辅助函数将 Vuex 模块 'cart' 中的 'cartList' 映射到当前组件的计算属性
+    ...mapState('cart', ['cartList']),
+    ...mapGetters('cart', ['cartTotal', 'selCartList', 'selCount', 'selPrice', 'isAllChecked'])
+  },
   /** 监听data数据变化 */
   watch: {},
   /** 所有方法 */
   methods: {
+    // 切换指定商品的选中状态
+    toggleCheck (goodsId) {
+      // 通过提交 'cart/toggleCheck' mutation 来切换商品的选中状态
+      this.$store.commit('cart/toggleCheck', goodsId)
+    },
+    // 切换购物车中所有商品的选中状态
+    toggleAllCheck () {
+      // 通过提交 'cart/toggleAllCheck' mutation 来切换购物车中所有商品的选中状态
+      this.$store.commit('cart/toggleAllCheck', !this.isAllChecked)
+    },
+    // 修改购物车中特定商品的数量
+    changeCount (goodsNum, goodsId, goodsSkuId) {
+      // 通过提交 'cart/changeCountAction' mutation 来修改指定商品的数量
+      this.$store.dispatch('cart/changeCountAction', {
+        goodsNum, // 商品id
+        goodsId, // 商品数量
+        goodsSkuId // 商品SKU, 默认值：0
+      })
+    }
 
   },
   /** 创建组件时执行(有VM对象this) */
   created () {
-
+    // 必须是登录过的用户，才能用购物车列表
+    if (this.$store.getters.token) {
+      // 如果用户已登录，调用 cart 模块中的 getCartAction action
+      this.$store.dispatch('cart/getCartAction')
+    }
   },
   /** 加载完组件时执行(主要预处理数据) */
   mounted () {

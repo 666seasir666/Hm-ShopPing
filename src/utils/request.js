@@ -1,4 +1,5 @@
 /* 封装axios用于发送请求 */
+import store from '@/store'
 import axios from 'axios'
 // 导入 Vant2 Toast弹窗提示
 import { Toast } from 'vant'
@@ -20,8 +21,15 @@ instance.interceptors.request.use(function (config) {
     message: '加载中...', // loading提示消息文本
     forbidClick: true, // 阻止用户点击其他元素
     loadingType: 'spinner', // 自定义图标
-    duration: 0 // 持续时间为 0，表示手动关闭
+    duration: 0 // 持续时间为 0，表示手动关闭 不会自动消失
   })
+
+  // 只要有token，就在请求时携带，便于请求需要授权的接口
+  const token = store.getters.token
+  if (token) {
+    config.headers['Access-Token'] = token
+    config.headers.platform = 'H5'
+  }
   return config
 }, function (error) {
   // 对请求错误做些什么

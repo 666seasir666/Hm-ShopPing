@@ -82,10 +82,14 @@
         <van-icon name="wap-home-o" />
         <span>首页</span>
       </div>
+
       <div class="icon-cart">
+        <!-- 如果购物车为0不显示角标 -->
+        <span v-if="cartTotal > 0" class="num">{{ cartTotal }}</span>
         <van-icon name="shopping-cart-o" />
         <span>购物车</span>
       </div>
+
       <div class="btn-add" @click="addFn">加入购物车</div>
       <div class="btn-buy" @click="buyFn">立刻购买</div>
     </div>
@@ -116,7 +120,7 @@
 
     <!-- 有库存才显示提交按钮 -->
     <div class="showbtn" v-if="ProductDetails.stock_total > 0">
-      <div class="btn" v-if="mode === 'cart'">加入购物车</div>
+      <div class="btn" v-if="mode === 'cart'" @click="addCart">加入购物车</div>
       <div class="btn now" v-if="mode === 'buyNow'">立刻购买</div>
     </div>
     <div class="btn-none" v-else>该商品已抢完</div>
@@ -133,6 +137,7 @@ import defaultImg from '@/assets/default-avatar.png'
 // import(导入)其他文件（如：组件，工具js，第三方插件js，json文件，图片文件等）
 
 import CountBox from '@/components/CountBox.vue'
+import { addCart } from '@/api/cart'
 export default {
   /** 注册组件 */
   components: {
@@ -155,7 +160,8 @@ export default {
       showPannel: false, // 购物车弹层默认关闭
       mode: 'cart', // 标记弹层状态
 
-      addCount: 1// 数字框绑定的数据
+      addCount: 1, // 数字框绑定的数据
+      cartTotal: 0 // 购物车角标
     }
   },
   /** 计算属性 */
@@ -211,6 +217,39 @@ export default {
     buyFn () {
       this.mode = 'buyNow'// 将 mode 设置为 'cart'，表示用户执行了购买操作
       this.showPannel = true// 显示购物车面板
+    },
+
+    // 购物车添加 token 鉴权判断，跳转携带回跳地址
+    // 判断用户是否已登录，如果未登录则弹出登录提示框
+    async addCart () {
+      // 判断用户是否已登录
+      if (!this.$store.getters.token) {
+        // 弹出登录提示框
+        this.$dialog
+          .confirm({
+            title: '温馨提示',
+            message: '此时需要先登录才能继续操作哦',
+            confirmButtonText: '去登录',
+            cancelButtonText: '再逛逛'
+          })
+          .then(() => {
+            // 跳转到登录页面，并传递当前页面路径作为回跳地址
+            this.$router.replace({
+              path: '/login',
+              query: {
+                backUrl: this.$route.fullPath
+              }
+            })
+          })
+          .catch(() => {})
+        return
+      }
+
+      const { data } = await addCart(this.goodsId, this.addCount, this.detail.skuList[0].goods_sku_id)
+      this.cartTotal = data.cartTotal
+      this.$toast('加入购物车成功')
+      this.showPannel = false
+      console.log(this.cartTotal)
     }
   },
   /** 创建组件时执行(有VM对象this) */
@@ -428,6 +467,24 @@ export default {
   }
   .btn-none {
     background-color: #cccccc;
+  }
+}
+
+// 购物车角标
+.footer .icon-cart {
+  position: relative;
+  padding: 0 6px;
+  .num {
+    z-index: 999;
+    position: absolute;
+    top: -2px;
+    right: 0;
+    min-width: 16px;
+    padding: 0 4px;
+    color: #fff;
+    text-align: center;
+    background-color: #ee0a24;
+    border-radius: 50%;
   }
 }
 </style>

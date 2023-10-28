@@ -213,9 +213,12 @@ export default {
         const res = await codeLogin(this.mobile, this.msgCode)
         // 如果登录成功，更新用户信息并导航到首页
         this.$store.commit('user/setUserInfo', res.data)
-        this.$router.push('/')
         // 显示登录成功的提示消息
         this.$toast('登录成功')
+        // 获取回跳地址，如果未指定则默认跳转到主页
+        const backUrl = this.$route.query.backUrl || '/'
+        // 使用 $router.replace() 方法将页面跳转到回跳地址
+        this.$router.replace(backUrl)
       } catch (error) {
         // 处理登录失败，例如显示错误消息
         console.error('登录失败:', error)
@@ -330,7 +333,7 @@ export default {
 
   .policy_tip {
     text-align: center;
-    font-size: 0.13rem;
+    font-size: 3.35vw;
     color: rgba(0, 0, 0, 0.3);
     margin-top: 1.15rem;
     display: flex;
