@@ -1,4 +1,6 @@
-// 引入axios请求工具
+// 商品接口
+
+// 导入名为 request 的模块，通常用于发送网络请求
 import request from '@/utils/request'
 
 // 获取"商品搜索"列表数据

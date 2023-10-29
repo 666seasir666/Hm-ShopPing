@@ -11,52 +11,68 @@
 <template>
   <div class="cart">
     <van-nav-bar title="购物车" fixed />
-    <!-- 购物车开头 -->
-    <div class="cart-title">
-      <span class="all">共<i>{{cartTotal}}</i>件商品</span>
-      <span class="edit">
-        <van-icon name="edit" />
-        编辑
-      </span>
-    </div>
+    <!-- 如果用户已登录且购物车列表中有至少一个购物车项，那么渲染这个元素
+    通常用于在用户登录后，且购物车不为空的情况下显示相关内容
+    如果其中任何一个条件不满足，该元素将不会被渲染或显示 -->
+      <div v-if="isLogin && cartList.lenght > 0">
+      <!-- 购物车开头 -->
+      <div class="cart-title">
+        <span class="all">共<i>{{cartTotal}}</i>件商品</span>
+        <!-- 使用@click指令，点击事件触发时切换编辑状态 -->
+        <span class="edit" @click="isEdit = !isEdit">
+          <van-icon name="edit" />
+          编辑
+        </span>
+      </div>
 
-    <!-- 购物车列表 -->
-    <div class="cart-list">
-      <div class="cart-item" v-for="item in cartList" :key="item.goods_id">
-        <van-checkbox icon-size="18" :value="item.isChecked" @click="toggleCheck(item.goods_id)" ></van-checkbox>
-        <div class="show">
-          <img :src="item.goods.goods_image" alt="">
+      <!-- 购物车列表 -->
+      <div class="cart-list">
+        <div class="cart-item" v-for="item in cartList" :key="item.goods_id">
+          <van-checkbox icon-size="18" :value="item.isChecked" @click="toggleCheck(item.goods_id)" ></van-checkbox>
+          <div class="show">
+            <img :src="item.goods.goods_image" alt="">
+          </div>
+          <div class="info">
+            <span class="tit text-ellipsis-2">{{ item.goods.goods_name }}</span>
+            <span class="bottom">
+              <div class="price">¥ <span>{{ item.goods.goods_price_min }}</span></div>
+              <!-- 既希望保留原本的形参，又需要通过调用函数传参 => 箭头函数包装一层 -->
+              <CountBox :value="item.goods_num" @input="value => changeCount(value, item.goods_id, item.goods_sku_id)"></CountBox>
+              <!-- <div class="count-box">
+                <button class="minus">-</button>
+                <input class="inp" :value="40" type="text" readonly>
+                <button class="add">+</button>
+              </div> -->
+            </span>
+          </div>
         </div>
-        <div class="info">
-          <span class="tit text-ellipsis-2">{{ item.goods.goods_name }}</span>
-          <span class="bottom">
-            <div class="price">¥ <span>{{ item.goods.goods_price_min }}</span></div>
-            <!-- 既希望保留原本的形参，又需要通过调用函数传参 => 箭头函数包装一层 -->
-            <CountBox :value="item.goods_num" @input="value => changeCount(value, item.goods_id, item.goods_sku_id)"></CountBox>
-            <!-- <div class="count-box">
-              <button class="minus">-</button>
-              <input class="inp" :value="40" type="text" readonly>
-              <button class="add">+</button>
-            </div> -->
-          </span>
+      </div>
+
+      <!-- 购物车底部 -->
+      <div class="footer-fixed">
+        <div @click="toggleAllCheck" class="all-check">
+          <van-checkbox  icon-size="18" :value="isAllChecked"></van-checkbox>
+          全选
+        </div>
+
+        <div class="all-total">
+          <div class="price">
+            <span>合计：</span>
+            <span>¥ <i class="totalPrice">{{selPrice}}</i></span>
+          </div>
+          <div v-if="!isEdit" class="goPay" :class="{ disabled: selCount === 0}" @click="goPay">结算({{selCount}})</div>
+          <div v-else @click="handleDel" class="delete" :class="{ disabled: selCount === 0}">删除</div>
         </div>
       </div>
     </div>
 
-    <div class="footer-fixed">
-      <div @click="toggleAllCheck" class="all-check">
-        <van-checkbox  icon-size="18" :value="isAllChecked"></van-checkbox>
-        全选
+    <!-- 购物车为空 -->
+    <div class="empty-cart" v-else>
+      <img src="@/assets/empty.png" alt="#">
+      <div class="tips">
+        您的购物车是空的，快去逛逛吧！
       </div>
-
-      <div class="all-total">
-        <div class="price">
-          <span>合计：</span>
-          <span>¥ <i class="totalPrice">{{selPrice}}</i></span>
-        </div>
-        <div v-if="true" class="goPay" :class="{ disabled: selCount === 0}">结算({{selCount}})</div>
-        <div v-else class="delete" :class="{ disabled: selCount === 0}">删除</div>
-      </div>
+      <div class="btn" @click="$router.push('/')">去逛逛</div>
     </div>
   </div>
 </template>
@@ -75,17 +91,39 @@ export default {
   name: 'CartPage',
   data () {
     return {
-
+      isEdit: false// 购物车默认不编辑状态
     }
   },
   /** 计算属性 */
   computed: {
     // 使用 mapState 辅助函数将 Vuex 模块 'cart' 中的 'cartList' 映射到当前组件的计算属性
     ...mapState('cart', ['cartList']),
-    ...mapGetters('cart', ['cartTotal', 'selCartList', 'selCount', 'selPrice', 'isAllChecked'])
+    ...mapGetters('cart', ['cartTotal', 'selCartList', 'selCount', 'selPrice', 'isAllChecked']),
+    isLogin () {
+      // 从 Vuex 存储中获取 'token' getter 的值。
+      // 如果 token 存在且为真值，表示用户已登录。
+      // 如果 token 为假值（例如 null 或 undefined），表示用户未登录。
+      return this.$store.getters.token
+    }
   },
   /** 监听data数据变化 */
-  watch: {},
+  watch: {
+    // 定义一个名为 "isEdit" 的计算属性或观察者函数
+    isEdit (value) {
+      // 检查 "value" 参数，如果为真（true），执行以下操作
+      if (value) {
+        // 调用 Vuex store 中的 "cart/toggleAllCheck" mutation，并传递参数为 false
+        this.$store.commit('cart/toggleAllCheck', false)
+        // 通常用于取消选择所有复选框
+      } else {
+        // 如果 "value" 不为真（false），则执行以下操作
+        // 再次调用 Vuex store 中的 "cart/toggleAllCheck" mutation，传递参数为 true
+        this.$store.commit('cart/toggleAllCheck', true)
+        // 通常用于选择所有复选框
+      }
+    }
+
+  },
   /** 所有方法 */
   methods: {
     // 切换指定商品的选中状态
@@ -106,13 +144,40 @@ export default {
         goodsId, // 商品数量
         goodsSkuId // 商品SKU, 默认值：0
       })
-    }
+    },
+    // 删除购物车列表数据
+    async handleDel () {
+      // 如果当前选中的购物车数量为零，则无需执行后续操作，直接返回
+      if (this.selCount === 0) return
 
+      // 通过 Vuex 的 store 分发一个名为 'cart/delSelect' 的 action，用于删除选中的购物车项
+      await this.$store.dispatch('cart/delSelect')
+
+      // 设置编辑状态为 false，可能用于退出编辑模式或重置界面状态
+      this.isEdit = false
+    },
+    // 去结算
+    goPay () {
+      if (this.selCount > 0) {
+        // 检查是否已选择了一项或多项
+        // 如果 selCount 大于 0，表示有选中的购物车项
+        this.$router.push({
+          // 使用 Vue Router 的 $router 对象来导航到新的路由
+          path: 'paly',
+          // 导航到名为 'play' 的路由路径
+          query: { // 向路由传递查询参数
+            mode: 'cart', // 添加名为 'mode' 的参数，值为 'cart'
+            cartIds: this.selCartList.map(item => item.id).join(',')
+            // 添加名为 'cartIds' 的参数，值为已选中购物车项的 id 列表,使用逗号分隔
+          }
+        })
+      }
+    }
   },
   /** 创建组件时执行(有VM对象this) */
   created () {
     // 必须是登录过的用户，才能用购物车列表
-    if (this.$store.getters.token) {
+    if (this.isLogin) {
       // 如果用户已登录，调用 cart 模块中的 getCartAction action
       this.$store.dispatch('cart/getCartAction')
     }
@@ -267,5 +332,32 @@ export default {
     }
   }
 
+}
+
+// 空购物车样式
+.empty-cart {
+  padding: 80px 30px;
+  img {
+    width: 140px;
+    height: 92px;
+    display: block;
+    margin: 0 auto;
+  }
+  .tips {
+    text-align: center;
+    color: #666;
+    margin: 30px;
+  }
+  .btn {
+    width: 110px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    background-color: #ee0a24;
+    border-radius: 16px;
+    color: #fff;
+    display: block;
+    margin: 0 auto;
+  }
 }
 </style>

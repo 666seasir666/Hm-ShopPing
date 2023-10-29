@@ -1,5 +1,7 @@
 // 导入来自 '@/api/cart' 模块的 getCartList 函数
-import { getCartList, changeCount } from '@/api/cart'
+import { getCartList, changeCount, delSelect } from '@/api/cart'
+
+import { Toast } from 'vant'// 导入 Toast 组件
 
 export default {
   namespaced: true,
@@ -64,6 +66,20 @@ export default {
 
       // 调用 changeCount 函数向服务器发送请求，更新购物车的数量
       await changeCount(goodsId, goodsNum, goodsSkuId)
+    },
+    // 删除购物车数据
+    async delSelect (context) {
+      // 从 Vuex store 的 getters 中获取已选择的购物车列表
+      const selCartList = context.getters.selCartList
+      // 提取已选择购物车列表中的 id 属性，以便进行删除操作
+      const cartIds = selCartList.map(item => item.id)
+      // 调用删除函数，传入已选择的购物车项的 id 列表
+      delSelect(cartIds)
+      // 弹出成功提示信息
+      Toast('删除成功')
+
+      // 重新拉去最新购物车的数据-重新渲染
+      context.dispatch('getCartAction')
     }
 
   },

@@ -1,4 +1,6 @@
-// 导入request工具模块
+// 商品全部分类接口
+
+// 导入名为 request 的模块，通常用于发送网络请求
 import request from '@/utils/request'
 
 // 获取分类数据
