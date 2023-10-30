@@ -14,7 +14,7 @@
     <!-- 如果用户已登录且购物车列表中有至少一个购物车项，那么渲染这个元素
     通常用于在用户登录后，且购物车不为空的情况下显示相关内容
     如果其中任何一个条件不满足，该元素将不会被渲染或显示 -->
-      <div v-if="isLogin && cartList.lenght > 0">
+      <div v-if="isLogin && cartList.length > 0">
       <!-- 购物车开头 -->
       <div class="cart-title">
         <span class="all">共<i>{{cartTotal}}</i>件商品</span>

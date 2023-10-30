@@ -1,74 +1,46 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 // 以下是一级路由配置
-import Layou from '@/views/layou'// 一级路由首页
 import Login from '@/views/login'// 登录
-import Myorder from '@/views/myorder'
-import Pay from '@/views/pay'// 支付
-import ProDetail from '@/views/prodetail'// 商品详情
+import Layout from '@/views/layout'// 一级路由首页
 import Search from '@/views/search'// 搜索
-import SearchList from '@/views/searchlist'// 搜索列表
+import SearchList from '@/views/search/list'// 搜索列表
+import ProDetail from '@/views/prodetail'// 商品详情
+import Pay from '@/views/pay'// 支付
+import MyOrder from '@/views/myorder'
 
 // 以下是二级路由配置
-import Home from '@/views/layou/home' // 二级路由首页
-import Category from '@/views/layou/category'// 分类页
-import Cart from '@/views/layou/cart'// 购物车
-import User from '@/views/layou/user' // 我的
+import Home from '@/views/layout/home' // 二级路由首页
+import Category from '@/views/layout/category'// 分类页
+import Cart from '@/views/layout/cart'// 购物车
+import User from '@/views/layout/user' // 我的
+
 import store from '@/store'
+
 Vue.use(VueRouter)
 
 const router = new VueRouter({
   routes: [
-    {
-      path: '/login',
-      component: Login
-    },
+    { path: '/login', component: Login },
     {
       path: '/',
-      component: Layou,
+      component: Layout,
       // 当用户访问http://localhost:8080/#/重定向到首页
       redirect: '/home',
       // 二级路由配置
       children: [
-        {
-          path: '/home',
-          component: Home
-        },
-        {
-          path: '/category',
-          component: Category
-        },
-        {
-          path: '/cart',
-          component: Cart
-        },
-        {
-          path: '/user',
-          component: User
-        }
+        { path: '/home', component: Home },
+        { path: '/category', component: Category },
+        { path: '/cart', component: Cart },
+        { path: '/user', component: User }
       ]
     },
-    {
-      path: '/search',
-      component: Search
-    },
-    {
-      path: '/searchlist',
-      component: SearchList
-    },
-    {
-    // 动态路由传参,确认将来是哪个商品。路由参数中需要携带ID
-      path: '/prodetail/:id',
-      component: ProDetail
-    },
-    {
-      path: '/pay',
-      component: Pay
-    },
-    {
-      path: '/myorder',
-      component: Myorder
-    }
+    { path: '/search', component: Search },
+    { path: '/searchlist', component: SearchList },
+    // 动态路由传参，确认将来是哪个商品，路由参数中携带 ID
+    { path: '/prodetail/:id', component: ProDetail },
+    { path: '/pay', component: Pay },
+    { path: '/myorder', component: MyOrder }
   ]
 })
 
@@ -79,18 +51,16 @@ const router = new VueRouter({
 // next(路径) 拦截到某个路径页面
 
 // 定义一个数组，专门用户存放所有需要权限访问的页面
-const authUrl = ['/pay', '/myorder']
+const authUrls = ['/pay', '/myorder']
 router.beforeEach((to, from, next) => {
-  // 获取用户令牌
-  const token = store.getters.token
-
   // 如果目标路由不在需要认证的路由列表中，直接放行
-  if (!authUrl.includes(to.path)) {
+  if (!authUrls.includes(to.path)) {
     next()
     return
   }
 
-  // 如果用户已登录（有令牌），则放行
+  // 是权限页面，需要判断token。如果用户已登录（有令牌），则放行
+  const token = store.getters.token
   if (token) {
     next()
   } else {

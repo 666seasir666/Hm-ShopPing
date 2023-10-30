@@ -244,8 +244,8 @@ export default {
           .catch(() => {})
         return
       }
-
-      const { data } = await addCart(this.goodsId, this.addCount, this.detail.skuList[0].goods_sku_id)
+      console.log(this.ProductDetails)
+      const { data } = await addCart(this.goodsId, this.addCount, this.ProductDetails.skuList[0].goods_sku_id)
       this.cartTotal = data.cartTotal
       this.$toast('加入购物车成功')
       this.showPannel = false
