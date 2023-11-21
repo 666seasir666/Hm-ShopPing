@@ -126,13 +126,21 @@ export default {
     validFn () {
       // 验证手机号格式
       if (!/^1[3-9]\d{9}$/.test(this.mobile)) {
-        this.$toast('请输入正确的手机号') // 显示手机号格式错误的提示消息
+        // 显示手机号格式错误的提示消息
+        this.$toast({
+          message: '请输入正确的手机号',
+          position: 'bottom'
+        })
         return false // 返回 false，表示验证不通过
       }
 
       // 验证图形验证码格式
       if (!/^\w{4}$/.test(this.picCode)) {
-        this.$toast('请输入正确的图形验证码') // 显示图形验证码格式错误的提示消息
+        // 显示图形验证码格式错误的提示消息
+        this.$toast({
+          message: '请输入正确的图形验证码',
+          position: 'bottom'
+        })
         return false // 返回 false，表示验证不通过
       }
       return true
@@ -141,7 +149,11 @@ export default {
     // 判断短信验证码是否正确
     isValidInput () {
       if (!/^\d{6}$/.test(this.msgCode)) {
-        this.$toast('请输入正确的手机验证码')
+        // this.$toast('请输入正确的手机验证码')
+        this.$toast({
+          message: '请输入正确的手机验证码!',
+          position: 'bottom'
+        })
         return false
       }
       return true
@@ -159,7 +171,10 @@ export default {
       if (!this.timer && this.second === this.totalSecond) {
         // 发送短信验证码请求,获取验证码
         await getMsgCode(this.picCode, this.picKey, this.mobile)
-        this.$toast('发送成功，请注意查收')
+        this.$toast({
+          message: '发送成功，请注意查收',
+          position: 'bottom'
+        })
 
         // 开启倒计时
         this.timer = setInterval(() => {
@@ -174,7 +189,11 @@ export default {
         }, 1000)
 
         // 发送请求，获取验证码
-        this.$toast('发送成功，请注意查收') // 使用 Vant2 Toast 方法显示消息提示
+        // 使用 Vant2 Toast 方法显示消息提示
+        this.$toast({
+          message: '发送成功，请注意查收',
+          position: 'bottom'
+        })
       }
     },
 
@@ -192,7 +211,10 @@ export default {
     async login () {
       // 检查用户是否同意用户协议
       if (!this.isAgreementChecked()) {
-        this.$toast('请先同意用户协议！')
+        this.$toast({
+          message: '请先同意用户协议！',
+          position: 'bottom'
+        })
         return
       }
       // 验证用户手机号和图形验证码是否合法

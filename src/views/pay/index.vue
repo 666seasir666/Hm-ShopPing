@@ -2,39 +2,36 @@
   功能：初始化功能描述
   作者：Hou
   邮箱：2429016980@qq.com
-  时间：2023年10月06日 04:23:26
+  时间：2023年11月18日 21:33:11
   版本：v1.0
   修改内容：vue2.0初始化模板
   修改人员：Hou
-  修改时间：2023年10月06日 04:23:26
+  修改时间：2023年11月18日 21:33:11
 -->
 <template>
   <div class="pay">
-    <van-nav-bar fixed title="订单结算台" left-arrow @click-left="$router.go(-1)" />
+    <van-nav-bar
+      fixed
+      title="订单结算台"
+      left-arrow
+      @click-left="$router.go(-1)"
+    />
 
     <!-- 地址相关 -->
     <div class="address">
-
       <div class="left-icon">
         <van-icon name="logistics" />
       </div>
 
-      <div class="info" v-if="selectedAddress.address_id">
+      <div class="info" v-if="selectAddress.address_id">
         <div class="info-content">
-          <span class="name">{{ selectedAddress.name }}</span>
-          <span class="mobile">{{ selectedAddress.phone }}</span>
+          <span class="name">{{ selectAddress.name }}</span>
+          <span class="mobile">{{ selectAddress.phone }}</span>
         </div>
-        <div class="info-address">
-          {{selectedAddress.region.province}}
-          {{selectedAddress.region.city}}
-          {{selectedAddress.region.region}}
-          <!-- {{longAddress}} -->
-        </div>
+        <div class="info-address">{{ longAddress }}</div>
       </div>
 
-      <div class="info" v-else>
-        请选择配送地址
-      </div>
+      <div class="info" v-else>请选择配送地址</div>
 
       <div class="right-icon">
         <van-icon name="arrow" />
@@ -45,9 +42,9 @@
     <div class="pay-list" v-if="order.goodsList">
       <div class="list">
         <div class="goods-item" v-for="item in order.goodsList" :key="item.goods_id">
-            <div class="left">
-              <img :src="item.goods_image" alt="" />
-            </div>
+          <div class="left">
+            <img :src="item.goods_image" alt="" />
+          </div>
             <div class="right">
               <p class="tit text-ellipsis-2">
                 {{ item.goods_name }}
@@ -57,144 +54,197 @@
                 <span class="price">¥{{ item.total_pay_price }}</span>
               </p>
             </div>
-        </div>
+          </div>
       </div>
 
       <div class="flow-num-box">
-        <span>共 {{ order.orderTotalNum }} 件商品，合计：</span>
-        <span class="money">￥{{ order.orderTotalPrice }}</span>
+          <span>共 {{ order.orderTotalNum }} 件商品，合计：</span>
+          <span class="money">￥{{ order.orderTotalPrice }}</span>
       </div>
 
       <div class="pay-detail">
-        <div class="pay-cell">
-          <span>订单总金额：</span>
-          <span class="red">￥{{ order.orderTotalPrice }}</span>
-        </div>
+          <div class="pay-cell">
+            <span>订单总金额：</span>
+            <span class="red">￥{{ order.orderTotalPrice }}</span>
+          </div>
 
-        <div class="pay-cell">
-          <span>优惠券：</span>
-          <span>无优惠券可用</span>
-        </div>
+          <div class="pay-cell">
+            <span>优惠券：</span>
+            <span>无优惠券可用</span>
+          </div>
 
-        <div class="pay-cell">
-          <span>配送费用：</span>
-          <span v-if="!selectedAddress">请先选择配送地址</span>
-          <span v-else class="red">+￥0.00</span>
-        </div>
+          <div class="pay-cell">
+            <span>配送费用：</span>
+            <span v-if="!selectAddress">请先选择配送地址</span>
+            <span v-else class="red">+￥0.00</span>
+          </div>
       </div>
 
-      <!-- 支付方式 -->
+    <!-- 支付方式 -->
       <div class="pay-way">
-        <span class="tit">支付方式</span>
-        <div class="pay-cell">
-          <span><van-icon name="balance-o" />余额支付（可用 ¥ {{ personal.balance }} 元）</span>
-          <!-- <span>请先选择配送地址</span> -->
-          <span class="red"><van-icon name="passed" /></span>
-        </div>
+          <span class="tit">支付方式</span>
+          <div class="pay-cell">
+            <span><van-icon name="balance-o" />余额支付（可用 ¥ {{ personal.balance }} 元）</span>
+            <!-- <span>请先选择配送地址</span> -->
+            <span class="red"><van-icon name="passed" /></span>
+          </div>
       </div>
 
-      <!-- 买家留言 -->
+    <!-- 买家留言 -->
       <div class="buytips">
-        <textarea placeholder="选填：买家留言（50字内）" name="" id="" cols="30" rows="10"></textarea>
+        <textarea v-model="remark" placeholder="选填：买家留言（50字内）" name="" id="" cols="30" rows="10"></textarea>
       </div>
     </div>
 
     <!-- 底部提交 -->
     <div class="footer-fixed">
       <div class="left">实付款：<span>￥{{ order.orderTotalPrice }}</span></div>
-      <div class="tipsbtn">提交订单</div>
+      <div class="tipsbtn" @click="submitOrder">提交订单</div>
     </div>
   </div>
 </template>
-
 <script>
 // import(导入)其他文件（如：组件，工具js，第三方插件js，json文件，图片文件等）
-
-// 导入名为 收获地址 的函数，用于收获地址相关操作  这个函数通常从 @/api/address 模块中导入
 import { getAddressList } from '@/api/address'
-
-// 导入名为 订单结算 的函数，用于订单相关操作  这个函数通常从 @/api/order 模块中导入
-import { checkOrder } from '@/api/order'
+import { checkOrder, submitOrder } from '@/api/order'
+import loginConfirm from '@/mixins/loginConfirm'
 export default {
   /** 注册组件 */
   components: {},
   /** 接受父组件传值 */
   props: {},
   name: 'PayIndex',
+  mixins: [loginConfirm],
   data () {
     return {
-      addressList: [], // 收获地址列表
-      order: {},
-      personal: {}
+      addressList: [], // 初始化地址列表为空数组
+      order: {}, // 订单对象，初始为空对象
+      personal: {}, // 个人信息对象，初始为空对象
+      remark: ''// 备注留言
     }
   },
   /** 计算属性 */
   computed: {
-    // 选择收获地址
-    selectedAddress () {
-      //  如果地址列表非空，返回第一个地址；否则，返回一个空对象
+    selectAddress () {
+    // 返回地址列表中的第一个地址，如果地址列表为空，则返回一个空对象
       return this.addressList[0] || {}
     },
 
-    // 长地址
-    // longAddress () {
-    //   const region = this.selectAddress.region
-    //   return region.province + region.city + region.region + this.selectAddress.detail
-    // }
+    longAddress () {
+    // 获取选择的地址的区域信息
+      const region = this.selectAddress.region
+      // 拼接并返回完整的地址，包括省、市、区以及详细地址
+      return region.province + region.city + region.region + this.selectAddress.detail
+    },
 
     mode () {
-      // 从当前路由的查询参数中获取 'mode' 值
+    // 获取当前路由中的查询参数中的 mode 值
       return this.$route.query.mode
     },
+
     cartIds () {
-      // 从当前路由的查询参数中获取 'cartIds' 值
+    // 获取当前路由中的查询参数中的 cartIds 值
       return this.$route.query.cartIds
+    },
+
+    goodsId () {
+      return this.$route.query.goodsId
+    },
+    goodsSkuId () {
+      return this.$route.query.goodsSkuId
+    },
+    goodsNum () {
+      return this.$route.query.goodsNum
     }
+
   },
   /** 监听data数据变化 */
   watch: {},
   /** 所有方法 */
   methods: {
-
-    // 从服务器获取地址列表，并将列表数据存储到组件的 addressList 属性中
     async getAddressList () {
-      // 调用 getAddressList() 函数，它返回一个包含地址列表的数据对象
+    // 调用异步函数 getAddressList() 获取地址列表数据
       const { data: { list } } = await getAddressList()
-
-      // 将获取到的地址列表数据存储到组件的 addressList 属性中
+      // 将获取到的地址列表赋值给组件的 getAddressList 属性
       this.addressList = list
     },
 
     async getOrderList () {
+    // 检查当前模式是否为 'cart'
       if (this.mode === 'cart') {
-        const { data: { order, personal } } = await checkOrder(this.mode, { cartIds: this.cartIds })
+        // 调用异步函数 checkOrder() 检查订单，传入当前模式和购物车标识符
+        const { data: { order, personal } } = await checkOrder(this.mode, {
+          cartIds: this.cartIds
+        })
+        // 将获取到的订单数据和个人信息数据赋值给组件的 order 和 personal 属性
+        this.order = order
+        this.personal = personal
+      }
+
+      if (this.mode === 'buyNow') {
+        const { data: { order, personal } } = await checkOrder(this.mode, {
+          goodsId: this.goodsId,
+          goodsSkuId: this.goodsSkuId,
+          goodsNum: this.goodsNum
+        })
         this.order = order
         this.personal = personal
       }
     },
-    /** 创建组件时执行(有VM对象this) */
-    created () {
-      this.getAddressList()
-      this.getOrderList()
-    },
-    /** 加载完组件时执行(主要预处理数据) */
-    mounted () {
 
-    },
-    beforeCreate () { /** 生命周期 - 创建之前 */ },
-    beforeMount () { /** 生命周期 - 挂载之前 */ },
-    beforeUpdate () { /** 生命周期 - 更新之前 */ },
-    updated () { /** 生命周期 - 更新之后 */ },
-    beforeDestroy () { /** 生命周期 - 销毁之前 */ },
-    destroyed () { /** 生命周期 - 销毁完成 */ },
-    activated () { /** keep-alive组件激活时调用。仅针对keep-alive组件有效 */ },
-    deactivated () { /** keep-alive组件停用时调用。仅针对keep-alive组件有效 */ }
-  }
+    // 提交订单
+    async submitOrder () {
+      // 如果当前模式是 'cart'，表示是从购物车提交订单
+      if (this.mode === 'cart') {
+        // 调用API提交购物车订单
+        await submitOrder(this.mode, {
+          cartIds: this.cartIds, // 传递购物车商品ID列表
+          remark: this.remark // 传递订单备注信息
+        })
+      }
+
+      // 如果当前模式是 'buyNow'，表示是立即购买提交订单
+      if (this.mode === 'buyNow') {
+        // 调用API提交立即购买订单
+        await submitOrder(this.mode, {
+          goodsId: this.goodsId, // 传递商品ID
+          goodsSkuId: this.goodsSkuId, // 传递商品SKU ID
+          goodsNum: this.goodsNum, // 传递商品数量
+          remark: this.remark // 传递订单备注信息
+        })
+      }
+
+      // 提示支付成功
+      this.$toast.success('支付成功')
+
+      // 跳转到我的订单页面
+      this.$router.replace('/myorder')
+    }
+  },
+  /** 创建组件时执行(有VM对象this) */
+  created () {
+    // 调用获取地址列表的方法
+    this.getAddressList()
+
+    // 调用获取订单列表的方法
+    this.getOrderList()
+  },
+  /** 加载完组件时执行(主要预处理数据) */
+  mounted () {
+
+  },
+  beforeCreate () { /** 生命周期 - 创建之前 */ },
+  beforeMount () { /** 生命周期 - 挂载之前 */ },
+  beforeUpdate () { /** 生命周期 - 更新之前 */ },
+  updated () { /** 生命周期 - 更新之后 */ },
+  beforeDestroy () { /** 生命周期 - 销毁之前 */ },
+  destroyed () { /** 生命周期 - 销毁完成 */ },
+  activated () { /** keep-alive组件激活时调用。仅针对keep-alive组件有效 */ },
+  deactivated () { /** keep-alive组件停用时调用。仅针对keep-alive组件有效 */ }
 }
 </script>
-
-<style scoped lang='less'>
- /* @import url(); 引入css类 */
+<style scoped lang="less">
+/* @import url(); 引入css类 */
 .pay {
   padding-top: 46px;
   padding-bottom: 46px;
@@ -329,12 +379,12 @@ export default {
     padding-left: 12px;
     color: #666;
     span {
-      color:#fa2209;
+      color: #fa2209;
     }
   }
   .tipsbtn {
     width: 121px;
-    background: linear-gradient(90deg,#f9211c,#ff6335);
+    background: linear-gradient(90deg, #f9211c, #ff6335);
     color: #fff;
     text-align: center;
     line-height: 46px;

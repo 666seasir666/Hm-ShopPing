@@ -1,6 +1,6 @@
 // Vant 按需导入 (推荐)
 import Vue from 'vue'
-import { Button, Switch, Tabbar, TabbarItem, NavBar, Toast, Checkbox, CheckboxGroup, Search, Swipe, SwipeItem, Grid, GridItem, Icon, Lazyload, Rate, ActionSheet, Dialog } from 'vant'
+import { Button, Switch, Tabbar, TabbarItem, NavBar, Toast, Checkbox, CheckboxGroup, Search, Swipe, SwipeItem, Grid, GridItem, Icon, Lazyload, Rate, ActionSheet, Dialog, Tab, Tabs } from 'vant'
 
 Vue.use(Button)
 Vue.use(Switch)
@@ -20,3 +20,5 @@ Vue.use(Lazyload)
 Vue.use(Rate)
 Vue.use(ActionSheet)
 Vue.use(Dialog)
+Vue.use(Tab)
+Vue.use(Tabs)

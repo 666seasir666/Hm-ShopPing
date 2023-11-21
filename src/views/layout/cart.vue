@@ -83,6 +83,8 @@ import CountBox from '@/components/CountBox.vue'
 // 导入 Vuex 中的 mapState 辅助函数，用于将组件的局部状态映射到组件的计算属性
 import { mapState, mapGetters } from 'vuex'
 
+// 在你的 Vue 组件中引入购物车接口
+import { delSelect } from '@/api/cart'
 export default {
   /** 注册组件 */
   components: { CountBox },
@@ -150,11 +152,26 @@ export default {
       // 如果当前选中的购物车数量为零，则无需执行后续操作，直接返回
       if (this.selCount === 0) return
 
-      // 通过 Vuex 的 store 分发一个名为 'cart/delSelect' 的 action，用于删除选中的购物车项
-      await this.$store.dispatch('cart/delSelect')
+      try {
+        console.log('Deleting cart items with IDs:', this.selectedCartIds) // 添加调试信息
+        // 调用删除购物车商品接口
+        await delSelect(this.selectedCartIds)
 
-      // 设置编辑状态为 false，可能用于退出编辑模式或重置界面状态
-      this.isEdit = false
+        // 更新本地 Vuex 状态，假设使用 'cart/delSelect' action
+        await this.$store.dispatch('cart/delSelect')
+
+        // 设置编辑状态为 false，可能用于退出编辑模式或重置界面状态
+        this.isEdit = false
+
+        // 延迟1s显示删除成功提示
+        setTimeout(() => {
+          // 使用 Toast.success 显示删除成功提示
+          this.toast.success('删除成功')
+        }, 1000) // 1000 毫秒，即 1 秒延迟
+      } catch (error) {
+        console.error('删除购物车商品失败调试', error)
+        this.$toast.fail('删除失败') // 显示错误提示
+      }
     },
     // 去结算
     goPay () {
@@ -163,7 +180,7 @@ export default {
         // 如果 selCount 大于 0，表示有选中的购物车项
         this.$router.push({
           // 使用 Vue Router 的 $router 对象来导航到新的路由
-          path: 'paly',
+          path: 'pay',
           // 导航到名为 'play' 的路由路径
           query: { // 向路由传递查询参数
             mode: 'cart', // 添加名为 'mode' 的参数，值为 'cart'

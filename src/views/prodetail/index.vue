@@ -2,17 +2,17 @@
   功能：初始化功能描述
   作者：Hou
   邮箱：2429016980@qq.com
-  时间：2023年10月06日 04:23:56
+  时间：2023年11月19日 17:22:53
   版本：v1.0
   修改内容：vue2.0初始化模板
   修改人员：Hou
-  修改时间：2023年10月06日 04:23:56
+  修改时间：2023年11月19日 17:22:53
 -->
 <template>
   <div class="prodetail">
     <van-nav-bar fixed title="商品详情页" left-arrow @click-left="$router.go(-1)" />
 
-    <van-swipe :autoplay="3000" @change="onChange">
+    <van-swipe :autoplay="4000" @change="onChange">
       <van-swipe-item v-for="(image, index) in images" :key="index">
         <img :src="image.external_url" />
       </van-swipe-item>
@@ -26,13 +26,13 @@
     <div class="info">
       <div class="title">
         <div class="price">
-          <span class="now">￥{{ ProductDetails.goods_price_min }}</span>
-          <span class="oldprice">￥{{ ProductDetails.goods_price_max }}</span>
+          <span class="now">￥{{ detail.goods_price_min }}</span>
+          <span class="oldprice">￥{{ detail.goods_price_max }}</span>
         </div>
-        <div class="sellcount">已售{{ ProductDetails.goods_sales }}件</div>
+        <div class="sellcount">已售 {{ detail.goods_sales }} 件</div>
       </div>
       <div class="msg text-ellipsis-2">
-        {{ ProductDetails.goods_name }}
+        {{ detail.goods_name }}
       </div>
 
       <div class="service">
@@ -55,11 +55,8 @@
       <div class="comment-list">
         <div class="comment-item" v-for="item in commentList" :key="item.comment_id">
           <div class="top">
-            <!-- 动态渲染用户评论的头像 -->
-            <!-- 如果有头像就渲染,没有就渲染默认头像 -->
             <img :src="item.user.avatar_url || defaultImg" alt="">
             <div class="name">{{ item.user.nick_name }}</div>
-            <!-- 动态渲染用户的评分 10分就是五颗星 10/2=5 -->
             <van-rate :size="16" :value="item.score / 2" color="#ffd21e" void-icon="star" void-color="#eee"/>
           </div>
           <div class="content">
@@ -73,71 +70,76 @@
     </div>
 
     <!-- 商品描述 -->
-    <div class="desc" v-html="ProductDetails.content">
+    <div class="desc" v-html="detail.content">
     </div>
 
     <!-- 底部 -->
     <div class="footer">
-      <div class="icon-home">
+      <div @click="$router.push('/')" class="icon-home">
         <van-icon name="wap-home-o" />
         <span>首页</span>
       </div>
-
-      <div class="icon-cart">
-        <!-- 如果购物车为0不显示角标 -->
+      <div @click="$router.push('/cart')" class="icon-cart">
         <span v-if="cartTotal > 0" class="num">{{ cartTotal }}</span>
         <van-icon name="shopping-cart-o" />
         <span>购物车</span>
       </div>
-
-      <div class="btn-add" @click="addFn">加入购物车</div>
-      <div class="btn-buy" @click="buyFn">立刻购买</div>
+      <div @click="addFn" class="btn-add">加入购物车</div>
+      <div @click="buyNow" class="btn-buy">立刻购买</div>
     </div>
 
-    <!-- 加入购物车的弹层 -->
+    <!-- 加入购物车/立即购买 公用的弹层 -->
     <van-action-sheet v-model="showPannel" :title="mode === 'cart' ? '加入购物车' : '立刻购买'">
-    <div class="product">
-    <div class="product-title">
-      <div class="left">
-        <img :src="ProductDetails.goods_image" alt="">
-      </div>
-      <div class="right">
-        <div class="price">
-          <span>¥</span>
-          <span class="nowprice">{{ ProductDetails.goods_price_min }}</span>
+      <div class="product">
+        <div class="product-title">
+          <div class="left">
+            <img :src="detail.goods_image" alt="">
+          </div>
+          <div class="right">
+            <div class="price">
+              <span>¥</span>
+              <span class="nowprice">{{ detail.goods_price_min }}</span>
+            </div>
+            <div class="count">
+              <span>库存</span>
+              <span>{{ detail.stock_total }}</span>
+            </div>
+          </div>
         </div>
-        <div class="count">
-          <span>库存</span>
-          <span>{{ ProductDetails.stock_total}}</span>
+        <div class="num-box">
+          <span>数量</span>
+          <!-- v-model 本质上 :value 和 @input 的简写 -->
+          <CountBox v-model="addCount"></CountBox>
         </div>
-      </div>
-    </div>
-    <div class="num-box">
-      <span>数量</span>
-      <!-- 加入购物车-数字框基本封装 -->
-      <CountBox v-model="addCount"></CountBox>
-    </div>
 
-    <!-- 有库存才显示提交按钮 -->
-    <div class="showbtn" v-if="ProductDetails.stock_total > 0">
-      <div class="btn" v-if="mode === 'cart'" @click="addCart">加入购物车</div>
-      <div class="btn now" v-if="mode === 'buyNow'">立刻购买</div>
-    </div>
-    <div class="btn-none" v-else>该商品已抢完</div>
-  </div>
+        <!-- 有库存才显示提交按钮 -->
+        <div class="showbtn" v-if="detail.stock_total > 0">
+          <div class="btn" v-if="mode === 'cart'" @click="addCart">加入购物车</div>
+          <div class="btn now" v-else @click="goBuyNow">立刻购买</div>
+        </div>
+
+        <div class="btn-none" v-else>该商品已抢完</div>
+      </div>
     </van-action-sheet>
   </div>
 </template>
-
 <script>
-import { getProDetail, getProComments } from '@/api/product'
-
-// 导入用户评论默认头像
-import defaultImg from '@/assets/default-avatar.png'
 // import(导入)其他文件（如：组件，工具js，第三方插件js，json文件，图片文件等）
+// 引入商品评论和商品详情的API接口
+import { getProComments, getProDetail } from '@/api/product'
 
+// 引入默认图片
+import defaultImg from '@/assets/default-avatar.png'
+
+// 引入数字输入框组件
 import CountBox from '@/components/CountBox.vue'
+
+// 引入添加购物车的API接口
 import { addCart } from '@/api/cart'
+
+// 引入登录确认的混合（mixins）
+import loginConfirm from '@/mixins/loginConfirm'
+
 export default {
   /** 注册组件 */
   components: {
@@ -146,30 +148,26 @@ export default {
   /** 接受父组件传值 */
   props: {},
   name: 'ProDetail',
+  mixins: [loginConfirm],
   data () {
     return {
-      images: [], // 初始化商品详情图片默认为空
-      current: 0, // 商品详情图片轮播图
-      // detail: {},
-      ProductDetails: {}, // 商品详情
+      images: [], // 商品图片列表
+      current: 0, // 当前显示的图片索引
+      detail: {}, // 商品详情信息
+      total: 0, // 商品评价总数
+      commentList: [], // 商品评价列表
+      defaultImg, // 默认图片
+      showPannel: false, // 控制弹层的显示隐藏
 
-      commentList: [], // 评价列表
-      total: [], // 总评价数
-      defaultImg, // 用户评论默认头像
-
-      showPannel: false, // 购物车弹层默认关闭
-      mode: 'cart', // 标记弹层状态
-
-      addCount: 1, // 数字框绑定的数据
-      cartTotal: 0 // 购物车角标
+      mode: 'cart', // 弹层状态，'cart'表示加入购物车，'buyNow'表示立即购买
+      addCount: 1, // 数字框绑定的数据，表示商品数量，默认为1
+      cartTotal: 0// 购物车角标，显示购物车中商品总数量
     }
   },
+
   /** 计算属性 */
   computed: {
-    // 计算属性用于获取当前路由的商品 ID
     goodsId () {
-      // 从当前路由对象 $route 中获取 params 属性
-      // 然后从 params 属性中获取名为 id 的值
       return this.$route.params.id
     }
   },
@@ -177,85 +175,71 @@ export default {
   watch: {},
   /** 所有方法 */
   methods: {
-    // 监听用户更改索引时触发的方法，用于更新当前索引
+  // 切换当前显示的图片索引
     onChange (index) {
       this.current = index
     },
-    // 异步方法，用于获取商品详情数据
+
+    // 异步获取商品详情信息
     async getDetail () {
-      // 通过 getProDetail 函数获取商品详情，使用 this.goodsId 作为参数
       const { data: { detail } } = await getProDetail(this.goodsId)
-
-      // 将获取到的商品详情数据存储在组件的 detail 属性中
-      this.ProductDetails = detail
-
-      // 获取商品图片信息并存储在 images 属性中
+      this.detail = detail
       this.images = detail.goods_images
-      // 打印商品详情图片
-      // console.log(this.images)
     },
 
-    // 异步方法，用于获取商品评价数据
+    // 异步获取商品评论信息
     async getComments () {
-      // 通过 getProComments 函数获取商品评价数据，使用 this.goodsId 作为参数，同时限制展示3条评论
       const { data: { list, total } } = await getProComments(this.goodsId, 3)
-
-      // 将获取到的商品评价列表存储在组件的 commentList 属性中
       this.commentList = list
-
-      // 存储评价的总数
       this.total = total
     },
 
-    // 点击“加入购物车”按钮时触发的方法
+    // 设置购物模式为加入购物车，并显示弹窗
     addFn () {
-      this.mode = 'cart'// 将 mode 设置为 'cart'，表示用户执行了加入购物车操作
-      this.showPannel = true// 显示购物车面板
+      this.mode = 'cart'
+      this.showPannel = true
     },
 
-    // 点击“立刻购买”按钮时触发的方法
-    buyFn () {
-      this.mode = 'buyNow'// 将 mode 设置为 'cart'，表示用户执行了购买操作
-      this.showPannel = true// 显示购物车面板
+    // 设置购物模式为立即购买，并显示弹窗
+    buyNow () {
+      this.mode = 'buyNow'
+      this.showPannel = true
     },
 
-    // 购物车添加 token 鉴权判断，跳转携带回跳地址
-    // 判断用户是否已登录，如果未登录则弹出登录提示框
+    // 异步添加商品到购物车
     async addCart () {
-      // 判断用户是否已登录
-      if (!this.$store.getters.token) {
-        // 弹出登录提示框
-        this.$dialog
-          .confirm({
-            title: '温馨提示',
-            message: '此时需要先登录才能继续操作哦',
-            confirmButtonText: '去登录',
-            cancelButtonText: '再逛逛'
-          })
-          .then(() => {
-            // 跳转到登录页面，并传递当前页面路径作为回跳地址
-            this.$router.replace({
-              path: '/login',
-              query: {
-                backUrl: this.$route.fullPath
-              }
-            })
-          })
-          .catch(() => {})
+    // 检查用户是否已登录确认
+      if (this.loginConfirm()) {
         return
       }
-      console.log(this.ProductDetails)
-      const { data } = await addCart(this.goodsId, this.addCount, this.ProductDetails.skuList[0].goods_sku_id)
+      const { data } = await addCart(this.goodsId, this.addCount, this.detail.skuList[0].goods_sku_id)
       this.cartTotal = data.cartTotal
       this.$toast('加入购物车成功')
       this.showPannel = false
-      console.log(this.cartTotal)
+    },
+
+    // 跳转到立即购买页面
+    goBuyNow () {
+    // 检查用户是否已登录确认
+      if (this.loginConfirm()) {
+        return
+      }
+      // 如果用户未登录确认，则执行以下代码进行路由跳转
+      this.$router.push({
+        path: '/pay',
+        query: {
+          mode: 'buyNow', // 设置支付模式为立即购买
+          goodsId: this.goodsId, // 传递商品ID
+          goodsSkuId: this.detail.skuList[0].goods_sku_id, // 传递商品SKU ID，此处假设商品的SKU列表不为空
+          goodsNum: this.addCount // 传递商品数量
+        }
+      })
     }
   },
   /** 创建组件时执行(有VM对象this) */
   created () {
-    this.getDetail()// 封装方法获取-商品详情
-    this.getComments() // 封装方法获取-商品评价
+    this.getDetail()
+    this.getComments()
   },
   /** 加载完组件时执行(主要预处理数据) */
   mounted () {
@@ -271,7 +255,6 @@ export default {
   deactivated () { /** keep-alive组件停用时调用。仅针对keep-alive组件有效 */ }
 }
 </script>
-
 <style scoped lang='less'>
  /* @import url(); 引入css类 */
 .prodetail {
@@ -409,7 +392,6 @@ export default {
       text-align: center;
       color: #fff;
       font-size: 14px;
-      cursor: pointer; /* 显示手型光标 */
     }
     .btn-buy {
       background-color: #fe5630;
@@ -421,7 +403,7 @@ export default {
   padding: 10px;
 }
 
-// 加入购物车和立即购买弹层样式
+// 弹层的样式
 .product {
   .product-title {
     display: flex;
@@ -470,7 +452,6 @@ export default {
   }
 }
 
-// 购物车角标
 .footer .icon-cart {
   position: relative;
   padding: 0 6px;
