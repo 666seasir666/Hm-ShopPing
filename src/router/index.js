@@ -1,21 +1,22 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-// 以下是一级路由配置
-import Login from '@/views/login'// 登录
-import Layout from '@/views/layout'// 一级路由首页
-import Search from '@/views/search'// 搜索
-import SearchList from '@/views/search/list'// 搜索列表
-import ProDetail from '@/views/prodetail'// 商品详情
-import Pay from '@/views/pay'// 支付
-import MyOrder from '@/views/myorder'
 
-// 以下是二级路由配置
+// 以下是二级路由配置-首页默认加载js
+import Layout from '@/views/layout'// 一级路由首页
 import Home from '@/views/layout/home' // 二级路由首页
 import Category from '@/views/layout/category'// 分类页
 import Cart from '@/views/layout/cart'// 购物车
 import User from '@/views/layout/user' // 我的
 
 import store from '@/store'
+
+// 以下是一级路由配置
+const Login = () => import('@/views/login')// 登录
+const Search = () => import('@/views/search')// 搜索
+const SearchList = () => import('@/views/search/list')// 搜索列表
+const ProDetail = () => import('@/views/prodetail')// 商品详情
+const Pay = () => import('@/views/pay')// 支付
+const MyOrder = () => import('@/views/myorder')
 
 Vue.use(VueRouter)
 
